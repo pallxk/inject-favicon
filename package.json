@@ -1,7 +1,7 @@
 {
   "name": "inject-favicon",
   "version": "1.0.0",
-  "description": "CLI for injection of HTML snippet for favicons",
+  "description": "CLI for injection of HTML snippet for favicons and manifest",
   "main": "index.js",
   "keywords": [
     "favicon"

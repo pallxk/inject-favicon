@@ -1,3 +1,4 @@
+const fs = require('fs')
 const os = require('os')
 const path = require('path')
 const { promisify } = require('util')
@@ -76,13 +77,30 @@ function addIconFactory(patterns, template) {
   }
 }
 
-async function injectFavicon(html, opts) {
-  const { searchDir: searchDir, color: color, url: url } = opts
-  const themeColor = opts.themeColor || color
-  const tileColor = opts.tileColor || color
-  const maskColor = opts.maskColor || color
+async function readManifest(dir, glob = manifestGlob) {
+  return await addFileFactory(glob, file => {
+    const manifest = JSON.parse(fs.readFileSync(file))
+    return manifest
+  })(dir, glob, dir)
+}
+
+async function injectFavicon(html = '', opts = {}) {
+  let { searchDir: searchDir, color: color, url: url } = opts
+
+  // Guess color from manifest if not specified explicitly
+  if (!color) {
+    const manifest = (await readManifest(searchDir, opts.manifest)) || {}
+    color = manifest.theme_color
+  }
 
   const $ = cheerio.load(html)
+  let themeColor = $('meta[name="theme-color" i]').attr('content') || opts.themeColor || color
+  let tileColor = $('meta[name="msapplication-TileColor" i]').attr('content') || opts.tileColor || color
+  let maskColor = $('link[rel="mask-icon" i]').attr('color') || opts.maskColor || color
+  themeColor = themeColor || tileColor || maskColor
+  tileColor = tileColor || themeColor || maskColor
+  maskColor = maskColor || themeColor || tileColor
+
   const snippet = [
     themeColor ? addThemeColor(themeColor) : [],
     tileColor ? addMsApplicationTileColor(tileColor): [],

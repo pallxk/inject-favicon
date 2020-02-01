@@ -38,7 +38,8 @@ Options:
   -i, --input         Path to input html file            [default: "/dev/stdin"]
   -o, --output        Path to output html file          [default: "/dev/stdout"]
   --color             Default color for theme color, mask icon color and tile
-                      color                                             [string]
+                      color. Defauts to theme_color specified in manifest if
+                      available.                                        [string]
   --theme-color       Theme color, used by Chrome and others            [string]
   --mask-color        Mask icon color used by Safari pinned tab icon    [string]
   --tile-color        Windows Start Screen pinned site tile color       [string]
@@ -56,14 +57,14 @@ Options:
 
 ```sh
 # Reads stdin and wrties stdout by default
-inject-favicon -s /path/to/favicons/dir --color '#123456' < original.html > injected.html
+inject-favicon -s /path/to/favicons/dir < original.html > injected.html
 curl -s example.com | inject-favicon -s /path/to/favicons/dir > my.html
 
 # Specify the same file as input and output to make change in-place
-inject-favicon -s /path/to/favicons/dir --color '#123456' -i path/to/my/file.html -o path/to/my/file.html
+inject-favicon -s /path/to/favicons/dir -i path/to/my/file.html -o path/to/my/file.html
 
 # Disable generation HTML for apple-touch-icon
-inject-favicon -s /path/to/favicons/dir --color '#123456' --apple-touch-icon '' -i input.html -o output.html
+inject-favicon -s /path/to/favicons/dir --apple-touch-icon '' -i input.html -o output.html
 
 # Fine tune with more options
 inject-favicon \
@@ -104,7 +105,6 @@ const html = '<!doctype html><html><head><title>Hello World</title></head><body>
 (async () => {
   const injectedHTML = await injectFavicon(html, {
     search: '~/favicons',
-    color: '#123456',
   });
   console.log(injectedHTML);
 })()
@@ -128,7 +128,6 @@ const inputFilename = 'a.html';
 const outputFilename = 'b.html';
 injectFaviconFile(inputFilename, outputFilename, {
   search: '~/favicons',
-  color: '#123456',
 });
 ```
 
