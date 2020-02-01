@@ -1,0 +1,99 @@
+const os = require('os')
+const path = require('path')
+const { promisify } = require('util')
+
+const cheerio = require('cheerio')
+const glob = promisify(require('glob'))
+const imageSize = promisify(require('image-size'))
+
+const iconGlob = exports.iconGlob = ['favicon.png', 'favicon-*.png']
+const addIcon = exports.addIcon = addIconFactory(
+  iconGlob,
+  (file, sizes, type) => `<link rel="icon" type="image/${type}" sizes=${sizes} href="${file}">`)
+
+/**
+ * https://realfavicongenerator.net/blog/how-ios-scales-the-apple-touch-icon/
+ * https://developer.apple.com/library/archive/documentation/AppleApplications/Reference/SafariWebContent/ConfiguringWebApplications/ConfiguringWebApplications.html
+ */
+const appleTouchIconGlob = exports.appleTouchIconGlob = ['apple-touch-icon.png', 'apple-touch-icon-*.png']
+const addAppleTouchIcon = exports.addAppleTouchIcon = addIconFactory(
+  appleTouchIconGlob,
+  (file, sizes) => `<link rel="apple-touch-icon" sizes="${sizes}" href="${file}">`)
+
+/**
+ * https://developer.apple.com/library/archive/documentation/AppleApplications/Reference/SafariWebContent/pinnedTabs/pinnedTabs.html
+ */
+const maskIconGlob = exports.maskIconGlob = ['safari-pinned-tab.svg']
+const addMaskIcon = exports.addMaskIcon = function (globDirectory, globPatterns, url = '/', color = '#777777') {
+  return addIconFactory(
+    maskIconGlob,
+    file => `<link rel="mask-icon" href="${file}" color="${color}">`)(globDirectory, globPatterns)
+}
+
+const manifestGlob = exports.manifestGlob = ['*.manifest', '*.webmanifest', 'manifest.json']
+const addManifest = exports.addManifest = addFileFactory(
+  manifestGlob,
+  file => `<link rel="manifest" href="${file}">`)
+
+const addThemeColor = exports.addThemeColor = function (color = '#777777') {
+  return `<meta name="theme-color" content="${color}">`
+}
+
+const addMsApplicationTileColor = exports.addMsApplicationTileColor = function (color = '#777777') {
+  return `<meta name="msapplication-TileColor" content="${color}">`
+}
+
+function addFileFactory(patterns, template) {
+  return async function (globDirectory = '.', globPatterns = patterns, url = '/') {
+    for (const pattern of globPatterns) {
+      const files = await glob(pattern, { cwd: globDirectory })
+      for (const f of files) {
+        return template(path.posix.join(url, f))
+      }
+    }
+  }
+}
+
+function addIconFactory(patterns, template) {
+  return async function (globDirectory = '.', globPatterns = patterns, url = '/') {
+    const links = []
+
+    for (const pattern of globPatterns) {
+      const files = await glob(pattern, { cwd: globDirectory })
+      for (const f of files) {
+        const result = await imageSize(path.join(globDirectory, f))
+        let sizes = ''
+        if (result.images) {
+          sizes = images.map(s => `${s.width}x${s.height}`).join(' ')
+        } else {
+          sizes = `${result.width}x${result.height}`
+        }
+        links.push(template(path.posix.join(url, f), sizes, result.type))
+      }
+    }
+
+    return links
+  }
+}
+
+async function injectFavicon(html, opts) {
+  const { searchDir: searchDir, color: color, url: url } = opts
+  const themeColor = opts.themeColor || color
+  const tileColor = opts.tileColor || color
+  const maskColor = opts.maskColor || color
+
+  const $ = cheerio.load(html)
+  const snippet = [
+    themeColor ? addThemeColor(themeColor) : [],
+    tileColor ? addMsApplicationTileColor(tileColor): [],
+    await addIcon(searchDir, opts.icon, url),
+    await addAppleTouchIcon(searchDir, opts.appleTouchIcon, url),
+    await addMaskIcon(searchDir, opts.maskIcon, url, maskColor),
+    await addManifest(searchDir, opts.manifest, url),
+  ].flat().join(os.EOL)
+  $('head').append(snippet)
+  // If input html is empty, we simply output the content of <head>
+  return html ? $.html() : $('head').html()
+}
+
+exports.injectFavicon = injectFavicon
