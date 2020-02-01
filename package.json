@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "CLI & helper function to inject HTML code snippet for favicons and manifest into an html file",
   "main": "index.js",
+  "bin": "cli.js",
   "keywords": [
     "favicon"
   ],
