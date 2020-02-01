@@ -1,7 +1,7 @@
 {
   "name": "inject-favicon",
   "version": "1.0.0",
-  "description": "CLI for injection of HTML snippet for favicons and manifest",
+  "description": "CLI & helper function to inject HTML code snippet for favicons and manifest into an html file",
   "main": "index.js",
   "keywords": [
     "favicon"
@@ -9,6 +9,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "repository": "pallxk/inject-favicon",
   "author": "pallxk <github@pallxk.com>",
   "license": "MIT",
   "dependencies": {
