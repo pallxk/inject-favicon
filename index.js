@@ -47,9 +47,9 @@ const addMsApplicationTileColor = exports.addMsApplicationTileColor = function (
 function addFileFactory(patterns, template) {
   return async function (globDirectory = '.', globPatterns = patterns, url = '/') {
     for (const pattern of globPatterns) {
-      const files = await glob(pattern, { cwd: globDirectory })
+      const files = await glob(pattern, { cwd: globDirectory, absolute: true })
       for (const f of files) {
-        return template(path.posix.join(url, f))
+        return template(calcHref(url, globDirectory, f))
       }
     }
   }
@@ -60,21 +60,28 @@ function addIconFactory(patterns, template) {
     const links = []
 
     for (const pattern of globPatterns) {
-      const files = await glob(pattern, { cwd: globDirectory })
+      const files = await glob(pattern, { cwd: globDirectory, absolute: true })
       for (const f of files) {
-        const result = await imageSize(path.join(globDirectory, f))
+        const result = await imageSize(f)
         let sizes = ''
         if (result.images) {
           sizes = images.map(s => `${s.width}x${s.height}`).join(' ')
         } else {
           sizes = `${result.width}x${result.height}`
         }
-        links.push(template(path.posix.join(url, f), sizes, result.type))
+        links.push(template(calcHref(url, globDirectory, f), sizes, result.type))
       }
     }
 
     return links
   }
+}
+
+function calcHref(base, from, to) {
+  return path.posix.join(
+    base,
+    path.posix.relative(from, to)
+  )
 }
 
 async function readManifest(dir, glob = manifestGlob) {
