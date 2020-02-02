@@ -28,7 +28,7 @@ const maskIconGlob = exports.maskIconGlob = ['safari-pinned-tab.svg']
 const addMaskIcon = exports.addMaskIcon = function (globDirectory, globPatterns, url = '/', color = '#777777') {
   return addIconFactory(
     maskIconGlob,
-    file => `<link rel="mask-icon" href="${file}" color="${color}">`)(globDirectory, globPatterns)
+    file => `<link rel="mask-icon" href="${file}" color="${color}">`)(globDirectory, globPatterns, url)
 }
 
 const manifestGlob = exports.manifestGlob = ['*.manifest', '*.webmanifest', 'manifest.json']
