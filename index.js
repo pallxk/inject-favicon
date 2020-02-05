@@ -139,7 +139,7 @@ async function injectFavicon(html = '', opts = {}) {
     return true
   })
 
-  $('head').append(snippets.join(os.EOL))
+  $('head').append(snippets.join(os.EOL) + os.EOL)
 
   // If input html is empty, we simply output the content of <head>
   return html ? $.html() : $('head').html()
