@@ -109,15 +109,27 @@ async function injectFavicon(html = '', opts = {}) {
   tileColor = tileColor || themeColor || maskColor
   maskColor = maskColor || themeColor || tileColor
 
-  const snippet = [
+  const snippets = [
     themeColor ? addThemeColor(themeColor) : [],
     tileColor ? addMsApplicationTileColor(tileColor): [],
     await addIcon(searchDir, opts.icon, url),
     await addAppleTouchIcon(searchDir, opts.appleTouchIcon, url),
     await addMaskIcon(searchDir, opts.maskIcon, url, maskColor),
     await addManifest(searchDir, opts.manifest, url),
-  ].flat().join(os.EOL)
-  $('head').append(snippet)
+  ].flat().filter(s => {
+    const node = cheerio.parseHTML(s)[0]
+    const tag = node.name
+    const { name, rel } = node.attribs
+
+    // Skip existing elements
+    if (tag === 'meta' && $(`${tag}[name="${name}" i]`).length) return false
+    if (tag === 'link' && $(`${tag}[rel="${rel}" i]`).length) return false
+
+    return true
+  })
+
+  $('head').append(snippets.join(os.EOL))
+
   // If input html is empty, we simply output the content of <head>
   return html ? $.html() : $('head').html()
 }
