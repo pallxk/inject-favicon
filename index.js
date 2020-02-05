@@ -52,6 +52,7 @@ function addFileFactory(patterns, template) {
         return template(calcHref(url, globDirectory, f))
       }
     }
+    return []
   }
 }
 
@@ -96,7 +97,7 @@ async function injectFavicon(html = '', opts = {}) {
 
   // Guess color from manifest if not specified explicitly
   if (!color) {
-    const manifest = (await readManifest(searchDir, opts.manifest)) || {}
+    const manifest = await readManifest(searchDir, opts.manifest)
     color = manifest.theme_color
   }
 
