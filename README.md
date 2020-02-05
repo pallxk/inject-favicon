@@ -132,6 +132,11 @@ injectFaviconFile(inputFilename, outputFilename, {
 ```
 
 
+## Debug
+
+Set environment variable `DEBUG` to `*` or `inject-favicon`.
+
+
 ## LICENSE
 
 [MIT](LICENSE)

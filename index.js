@@ -4,6 +4,7 @@ const path = require('path')
 const { promisify } = require('util')
 
 const cheerio = require('cheerio')
+const log = require('debug')('inject-favicon')
 const glob = promisify(require('glob'))
 const imageSize = promisify(require('image-size'))
 
@@ -49,6 +50,7 @@ function addFileFactory(patterns, template) {
     for (const pattern of globPatterns) {
       const files = await glob(pattern, { cwd: globDirectory, absolute: true })
       for (const f of files) {
+        log('Found:', f)
         return template(calcHref(url, globDirectory, f))
       }
     }
@@ -63,6 +65,7 @@ function addIconFactory(patterns, template) {
     for (const pattern of globPatterns) {
       const files = await glob(pattern, { cwd: globDirectory, absolute: true })
       for (const f of files) {
+        log('Found:', f)
         const result = await imageSize(f)
         let sizes = ''
         if (result.images) {
@@ -93,12 +96,15 @@ async function readManifest(dir, glob = manifestGlob) {
 }
 
 async function injectFavicon(html = '', opts = {}) {
+  log('options: %O', opts)
+
   let { searchDir: searchDir, color: color, url: url } = opts
 
   // Guess color from manifest if not specified explicitly
   if (!color) {
     const manifest = await readManifest(searchDir, opts.manifest)
     color = manifest.theme_color
+    log('Found manifest, using its theme_color as color:', color)
   }
 
   const $ = cheerio.load(html)
@@ -108,6 +114,10 @@ async function injectFavicon(html = '', opts = {}) {
   themeColor = themeColor || tileColor || maskColor
   tileColor = tileColor || themeColor || maskColor
   maskColor = maskColor || themeColor || tileColor
+
+  log('Using themeColor:', themeColor)
+  log('Using tileColor:', tileColor)
+  log('Using maskColor:', maskColor)
 
   const snippets = [
     themeColor ? addThemeColor(themeColor) : [],
@@ -125,6 +135,7 @@ async function injectFavicon(html = '', opts = {}) {
     if (tag === 'meta' && $(`${tag}[name="${name}" i]`).length) return false
     if (tag === 'link' && $(`${tag}[rel="${rel}" i]`).length) return false
 
+    log('Adding snippet:', s)
     return true
   })
 
