@@ -1,6 +1,6 @@
 {
   "name": "inject-favicon",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "CLI & helper function to inject HTML code snippet for favicons and manifest into an html file",
   "main": "index.js",
   "bin": "cli.js",
